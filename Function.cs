@@ -1,7 +1,9 @@
 using Amazon.CognitoIdentityProvider;
 using Amazon.CognitoIdentityProvider.Model;
+using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
 using Snack.Bar.Auth.Register.Models;
+using System.Text.Json;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
@@ -15,40 +17,32 @@ public class Function
 
     private static readonly AmazonCognitoIdentityProviderClient _provider = new();
 
-    public async Task<UserResponse> FunctionHandler(string teste, ILambdaContext context)
+    public async Task<UserResponse> FunctionHandler(APIGatewayProxyRequest request, ILambdaContext context)
     {
         try
         {
-            context.Logger.LogLine($"Erro: {teste}");
+            var user = JsonSerializer.Deserialize<UserRequest>(request.Body);
 
-            return new UserResponse
-            {
-                Success = false,
-                Message = teste
-            };
-
-            var request = new UserRequest();
-
-            ValidatePayload(request);
+            ValidatePayload(user);
             ValidateEnvironmentVariables();
 
             var listUsersRequest = new ListUsersRequest
             {
                 UserPoolId = _userPoolId,
-                Filter = $"email = \"{request.Email}\""
+                Filter = $"email = \"{user.Email}\""
             };
 
             var userList = await _provider.ListUsersAsync(listUsersRequest);
 
             var attributes = new List<AttributeType>
             {
-                new AttributeType { Name = "name", Value = request.Name },
-                new AttributeType { Name = "email", Value = request.Email }
+                new AttributeType { Name = "name", Value = user.Name },
+                new AttributeType { Name = "email", Value = user.Email }
             };
 
-            if (!string.IsNullOrEmpty(request.Phone))
+            if (!string.IsNullOrEmpty(user.Phone))
             {
-                attributes.Add(new AttributeType { Name = "phone_number", Value = request.Phone });
+                attributes.Add(new AttributeType { Name = "phone_number", Value = user.Phone });
             }
 
             if (userList.Users.Count > 0)
@@ -57,18 +51,17 @@ public class Function
                 var updateRequest = new AdminUpdateUserAttributesRequest
                 {
                     UserPoolId = _userPoolId,
-                    Username = request.Name,
+                    Username = user.Name,
                     UserAttributes = attributes
                 };
 
                 await _provider.AdminUpdateUserAttributesAsync(updateRequest);
 
-                // Opcional: se desejar atualizar a senha também, pode chamar AdminSetUserPassword
                 var setPasswordRequest = new AdminSetUserPasswordRequest
                 {
                     UserPoolId = _userPoolId,
-                    Username = request.Name,
-                    Password = request.Password,
+                    Username = user.Name,
+                    Password = user.Password,
                     Permanent = true
                 };
 
@@ -82,24 +75,22 @@ public class Function
             }
             else
             {
-                // Usuário não existe: cria o usuário usando a senha informada como permanente
                 var createUserRequest = new AdminCreateUserRequest
                 {
                     UserPoolId = _userPoolId,
-                    Username = request.Name,
+                    Username = user.Name,
                     UserAttributes = attributes,
-                    TemporaryPassword = request.Password,
+                    TemporaryPassword = user.Password,
                     MessageAction = MessageActionType.SUPPRESS
                 };
 
                 await _provider.AdminCreateUserAsync(createUserRequest);
 
-                // Imediatamente define a senha como permanente
                 var setPasswordRequest = new AdminSetUserPasswordRequest
                 {
                     UserPoolId = _userPoolId,
-                    Username = request.Name,
-                    Password = request.Password,
+                    Username = user.Name,
+                    Password = user.Password,
                     Permanent = true
                 };
 

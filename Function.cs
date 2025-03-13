@@ -17,13 +17,13 @@ public class Function
 
     private static readonly AmazonCognitoIdentityProviderClient _provider = new();
 
-    public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest request, ILambdaContext context)
+    public async Task<APIGatewayProxyResponse> FunctionHandler(UserRequest user, ILambdaContext context)
     {
         try
         {
-            context.Logger.LogError($"Request Body: {request}");
+            //context.Logger.LogError($"Request Body: {request}");
 
-            var user = JsonSerializer.Deserialize<UserRequest>(request.Body);
+            //var user = JsonSerializer.Deserialize<UserRequest>(request.Body);
 
             ValidatePayload(user);
             ValidateEnvironmentVariables();

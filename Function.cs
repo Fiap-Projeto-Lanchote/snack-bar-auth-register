@@ -17,7 +17,7 @@ public class Function
 
     private static readonly AmazonCognitoIdentityProviderClient _provider = new();
 
-    public async Task<UserResponse> FunctionHandler(APIGatewayProxyRequest request, ILambdaContext context)
+    public async Task<APIGatewayProxyResponse> FunctionHandler(APIGatewayProxyRequest request, ILambdaContext context)
     {
         try
         {
@@ -67,11 +67,11 @@ public class Function
 
                 await _provider.AdminSetUserPasswordAsync(setPasswordRequest);
 
-                return new UserResponse
+                return MapToApiGatewayResponse(new UserResponse
                 {
                     Success = true,
                     Message = "Usuário atualizado com sucesso!"
-                };
+                }, 200);
             }
             else
             {
@@ -96,21 +96,22 @@ public class Function
 
                 await _provider.AdminSetUserPasswordAsync(setPasswordRequest);
 
-                return new UserResponse
+                return MapToApiGatewayResponse(new UserResponse
                 {
                     Success = true,
                     Message = "Usuário criado com sucesso!"
-                };
+                }, 201);
             }
         }
         catch (Exception ex)
         {
             context.Logger.LogLine($"Erro: {ex.Message}");
-            return new UserResponse
+
+            return MapToApiGatewayResponse(new UserResponse
             {
                 Success = false,
                 Message = $"Erro ao processar o usuário: {ex.Message}"
-            };
+            }, 500);
         }
     }
 
@@ -133,5 +134,18 @@ public class Function
 
         if (string.IsNullOrWhiteSpace(request.Name) || string.IsNullOrWhiteSpace(request.Name))
             throw new Exception($"Invalid Payload: {request}.");
+    }
+
+    private APIGatewayProxyResponse MapToApiGatewayResponse(UserResponse response, int statusCode)
+    {
+        return new APIGatewayProxyResponse
+        {
+            StatusCode = statusCode,
+            Body = JsonSerializer.Serialize(response),
+            Headers = new Dictionary<string, string>
+            {
+                { "Content-Type", "application/json" }
+            }
+        };
     }
 }

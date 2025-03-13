@@ -7,9 +7,6 @@
         public string Password { get; set; }
         public string? Phone { get; set; }
 
-        public override readonly string ToString()
-        {
-            return $"Name: {Name} | Email: {Email} | Password: {Password} | Phone {Phone}";
-        }
+        public override readonly string ToString() => $"Name: {Name} | Email: {Email} | Password: {Password} | Phone {Phone}";
     }
 }

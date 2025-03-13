@@ -30,12 +30,11 @@ public class Function
 
             var userList = await _provider.ListUsersAsync(listUsersRequest);
 
-            // Cria a lista base de atributos (name, email e opcionalmente telefone)
             var attributes = new List<AttributeType>
-        {
-            new AttributeType { Name = "name", Value = request.Name },
-            new AttributeType { Name = "email", Value = request.Email }
-        };
+            {
+                new AttributeType { Name = "name", Value = request.Name },
+                new AttributeType { Name = "email", Value = request.Email }
+            };
 
             if (!string.IsNullOrEmpty(request.Phone))
             {
@@ -48,7 +47,7 @@ public class Function
                 var updateRequest = new AdminUpdateUserAttributesRequest
                 {
                     UserPoolId = _userPoolId,
-                    Username = request.Email,
+                    Username = request.Name,
                     UserAttributes = attributes
                 };
 
@@ -58,7 +57,7 @@ public class Function
                 var setPasswordRequest = new AdminSetUserPasswordRequest
                 {
                     UserPoolId = _userPoolId,
-                    Username = request.Email,
+                    Username = request.Name,
                     Password = request.Password,
                     Permanent = true
                 };
@@ -77,10 +76,10 @@ public class Function
                 var createUserRequest = new AdminCreateUserRequest
                 {
                     UserPoolId = _userPoolId,
-                    Username = request.Email,
+                    Username = request.Name,
                     UserAttributes = attributes,
-                    TemporaryPassword = request.Password, // Senha inicial (temporária)
-                    MessageAction = MessageActionType.SUPPRESS  // Suprime o envio de e-mail
+                    TemporaryPassword = request.Password,
+                    MessageAction = MessageActionType.SUPPRESS                    
                 };
 
                 await _provider.AdminCreateUserAsync(createUserRequest);
@@ -89,7 +88,7 @@ public class Function
                 var setPasswordRequest = new AdminSetUserPasswordRequest
                 {
                     UserPoolId = _userPoolId,
-                    Username = request.Email,
+                    Username = request.Name,
                     Password = request.Password,
                     Permanent = true
                 };
@@ -113,7 +112,6 @@ public class Function
             };
         }
     }
-
 
     private static void ValidateEnvironmentVariables()
     {

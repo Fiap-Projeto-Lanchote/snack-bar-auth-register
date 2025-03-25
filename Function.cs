@@ -1,9 +1,7 @@
 using Amazon.CognitoIdentityProvider;
 using Amazon.CognitoIdentityProvider.Model;
-using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
 using Snack.Bar.Auth.Register.Models;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
@@ -134,6 +132,7 @@ public class Function
         if (string.IsNullOrWhiteSpace(request.Name) || string.IsNullOrWhiteSpace(request.Name))
             throw new Exception($"Invalid Payload: {request}.");
         
+        // Dispara erro caso o campo telefone seja preenchido com um formato invalido pelo cognito
         if (!string.IsNullOrWhiteSpace(request.Phone) && !IsValidPhoneNumber(request.Phone))
             throw new Exception($"Invalid Payload: Phone number '{request.Phone}' is not in the correct E.164 format (+[country_code][number]).");
     }

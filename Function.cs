@@ -4,6 +4,7 @@ using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
 using Snack.Bar.Auth.Register.Models;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
@@ -132,18 +133,17 @@ public class Function
 
         if (string.IsNullOrWhiteSpace(request.Name) || string.IsNullOrWhiteSpace(request.Name))
             throw new Exception($"Invalid Payload: {request}.");
+        
+        if (!string.IsNullOrWhiteSpace(request.Phone) && !IsValidPhoneNumber(request.Phone))
+            throw new Exception($"Invalid Payload: Phone number '{request.Phone}' is not in the correct E.164 format (+[country_code][number]).");
     }
 
-    //private APIGatewayProxyResponse MapToApiGatewayResponse(UserResponse response, int statusCode)
-    //{
-    //    return new APIGatewayProxyResponse
-    //    {
-    //        StatusCode = statusCode,
-    //        Body = JsonSerializer.Serialize(response),
-    //        Headers = new Dictionary<string, string>
-    //        {
-    //            { "Content-Type", "application/json" }
-    //        }
-    //    };
-    //}
+    /// <summary>
+    /// Valida se o número de telefone está no formato E.164 (+[código do país][número])
+    /// Exemplo válido: +5511912345678 (Brasil)
+    /// </summary>
+    private static bool IsValidPhoneNumber(string phone)
+    {
+        return Regex.IsMatch(phone, @"^\+\d{1,15}$");
+    }
 }

@@ -21,10 +21,6 @@ public class Function
     {
         try
         {
-            //context.Logger.LogError($"Request Body: {request}");
-
-            //var user = JsonSerializer.Deserialize<UserRequest>(request.Body);
-
             ValidatePayload(user);
             ValidateEnvironmentVariables();
 

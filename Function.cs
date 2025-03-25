@@ -17,7 +17,7 @@ public class Function
 
     private static readonly AmazonCognitoIdentityProviderClient _provider = new();
 
-    public async Task<APIGatewayProxyResponse> FunctionHandler(UserRequest user, ILambdaContext context)
+    public async Task<UserResponse> FunctionHandler(UserRequest user, ILambdaContext context)
     {
         try
         {
@@ -65,11 +65,11 @@ public class Function
 
                 await _provider.AdminSetUserPasswordAsync(setPasswordRequest);
 
-                return MapToApiGatewayResponse(new UserResponse
+                return new UserResponse
                 {
                     Success = true,
                     Message = "Usuário atualizado com sucesso!"
-                }, 200);
+                };
             }
             else
             {
@@ -94,22 +94,22 @@ public class Function
 
                 await _provider.AdminSetUserPasswordAsync(setPasswordRequest);
 
-                return MapToApiGatewayResponse(new UserResponse
+                return new UserResponse
                 {
                     Success = true,
                     Message = "Usuário criado com sucesso!"
-                }, 201);
+                };
             }
         }
         catch (Exception ex)
         {
             context.Logger.LogLine($"Erro: {ex.Message}");
 
-            return MapToApiGatewayResponse(new UserResponse
+            return new UserResponse
             {
                 Success = false,
                 Message = $"Erro ao processar o usuário: {ex.Message}"
-            }, 500);
+            };
         }
     }
 
@@ -134,16 +134,16 @@ public class Function
             throw new Exception($"Invalid Payload: {request}.");
     }
 
-    private APIGatewayProxyResponse MapToApiGatewayResponse(UserResponse response, int statusCode)
-    {
-        return new APIGatewayProxyResponse
-        {
-            StatusCode = statusCode,
-            Body = JsonSerializer.Serialize(response),
-            Headers = new Dictionary<string, string>
-            {
-                { "Content-Type", "application/json" }
-            }
-        };
-    }
+    //private APIGatewayProxyResponse MapToApiGatewayResponse(UserResponse response, int statusCode)
+    //{
+    //    return new APIGatewayProxyResponse
+    //    {
+    //        StatusCode = statusCode,
+    //        Body = JsonSerializer.Serialize(response),
+    //        Headers = new Dictionary<string, string>
+    //        {
+    //            { "Content-Type", "application/json" }
+    //        }
+    //    };
+    //}
 }
